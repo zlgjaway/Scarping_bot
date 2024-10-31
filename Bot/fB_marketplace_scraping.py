@@ -10,7 +10,12 @@ class FBMarketplaceScraper:
         self.email = "nevav55008@ibtrades.com"
         self.password = "Rog#252005"
         self.city = "adelaide"
+        self.max_price= 500
+        self.min_price = 10
+        self.base_url = "https://www.facebook.com/marketplace/?ref=app_tab"
+        self.days_listed = 7
         self.driver = webdriver.Chrome()
+        #"https://www.facebook.com/marketplace/?ref=app_tab"
 
     def login(self):
         self.driver.get("https://www.facebook.com/login")
@@ -20,7 +25,8 @@ class FBMarketplaceScraper:
         time.sleep(5)  # Wait for login
 
     def scrape_marketplace(self):
-        self.driver.get("https://www.facebook.com/marketplace/?ref=app_tab")
+        url = f"{self.base_url}minPrice={self.min_price}&maxPrice={self.max_price}&daysSinceListed={self.days_listed}&exact=false"
+        self.driver.get(url)
         time.sleep(5)
 
         all_html_content = []
