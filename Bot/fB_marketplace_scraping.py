@@ -15,7 +15,7 @@ class FBMarketplaceScraper:
         self.base_url = "https://www.facebook.com/marketplace/?ref=app_tab"
         self.days_listed = 7
         self.driver = webdriver.Chrome()
-        #"https://www.facebook.com/marketplace/?ref=app_tab"
+
 
     def login(self):
         self.driver.get("https://www.facebook.com/login")
