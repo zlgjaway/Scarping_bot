@@ -12,18 +12,21 @@ class EbayScraper(object):
         self.api_key = API_key
 
     def extract_csv(self):
-        self.df = pd.read_csv('facebook_marketplace_data.csv', sep=',', usecols=['title'])
-        print(self.df)
+        df = pd.read_csv('facebook_marketplace_data.csv', sep=',', usecols=['title'])
+        print(df)
 
-    def request_item(self):
+
+    def request_item(self, keywords):
         try:
             api  = finding(appid=self.api_key, config_file=None )
-            response = api.execute('findItemsAdvanced', {'keywords': self.df})
+            response = api.execute('findItemsAdvanced', {'keywords': keywords})
             for item in response.reply.searchResult.item:
-                print("Price: {item.sellingStatus}")
+                print("Price: {item.sellingStatus.currentPrice.value}")
         except ConnectionError as e:
             print(e)
             print(e.response.dict())
 
 scraper =  EbayScraper(API_key)
-scraper.request_item()
+df = scraper.extract_csv()
+for keyword in df:
+    scraper.request_item(keyword)
