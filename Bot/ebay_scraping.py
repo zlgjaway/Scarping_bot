@@ -1,20 +1,29 @@
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.wait import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
+import os
+from ebaysdk.finding import Connection as finding
+from ebaysdk.exception import ConnectionError
+from dotenv import load_dotenv
+import datetime
 import pandas as pd
+load_dotenv()
+API_key =os.getenv("api_key")
 
+class EbayScraper(object):
+    def __init__(self, API_key):
+        self.api_key = API_key
 
+    def extract_csv(self):
+        self.df = pd.read_csv('facebook_marketplace_data.csv', sep=',', usecols=['title'])
+        print(self.df)
 
-import time
-email = "long252005@gmail.com"
-password = "Rog#252005"
-driver = webdriver.Chrome()
-#driver = uc.Chrome()
-df_title = pd.read_csv('facebook_marketplace_data.csv', sep=',', usecols=['title'])
+    def request_item(self):
+        try:
+            api  = finding(appid=self.api_key, config_file=None )
+            response = api.execute('findItemsAdvanced', {'keywords': self.df})
+            for item in response.reply.searchResult.item:
+                print("Price: {item.sellingStatus}")
+        except ConnectionError as e:
+            print(e)
+            print(e.response.dict())
 
-
-driver.get("https://www.ebay.com.au/")
-driver.find_element(By.ID, "gh-ac").send_keys(df_title)
-time.sleep(5)
-
+scraper =  EbayScraper(API_key)
+scraper.request_item()
