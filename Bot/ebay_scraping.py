@@ -2,7 +2,6 @@ import os
 from ebaysdk.finding import Connection as finding
 from ebaysdk.exception import ConnectionError
 from dotenv import load_dotenv
-import datetime
 import pandas as pd
 load_dotenv()
 API_key =os.getenv("api_key")
@@ -12,7 +11,7 @@ class EbayScraper(object):
         self.api_key = API_key
         self.max_price = 500
         self.min_price = 10
-        self.limit_rate = 5000
+        self.limit_rate = 1
 
     def extract_csv(self):
         df = pd.read_csv('facebook_marketplace_data.csv', sep=',', usecols=['title','price'])
@@ -22,6 +21,7 @@ class EbayScraper(object):
     
     def request_item(self, keywords):
         call_rate = 0
+        item_extract = []
         while call_rate <= self.limit_rate : 
             try:
                 api  = finding(appid=self.api_key, config_file=None )
@@ -35,13 +35,19 @@ class EbayScraper(object):
                         }
                     })
                     print (response)
-                call_rate = call_rate +1
+            
                 for item in response.reply.searchResult.item:
-                    print(f"Price: {item.currentPrice.value}")
+                    item_extract = item.currentPrice.value
+                    return item_extract
             except ConnectionError as e:
                 print(e.response.dict())
+        call_rate +1
+    def save_to_csv(self,data):
+        df = pd.DataFrame(data)
+        df.to_csv('ebay_data.csv', index=False)
+        print(df)
 
 scraper = EbayScraper(API_key)
 keywords = scraper.extract_csv()  # Get all keywords
-scraper.request_item(keywords)    # Pass all keywords at once
-
+data = scraper.request_item(keywords)    # Pass all keywords at once
+scraper.save_to_csv(data)
