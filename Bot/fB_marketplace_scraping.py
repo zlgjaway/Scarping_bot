@@ -23,7 +23,7 @@ class FBMarketplaceScraper:
         self.driver.find_element(By.ID, "pass").send_keys(self.password)
         self.driver.find_element(By.ID, "pass").submit()
         time.sleep(5)  # Wait for login
-    
+
     def scrape_marketplace(self):
         url = f"{self.base_url}minPrice={self.min_price}&maxPrice={self.max_price}&daysSinceListed={self.days_listed}&exact=false"
         self.driver.get(url)
