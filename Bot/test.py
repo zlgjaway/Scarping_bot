@@ -84,11 +84,3 @@ class FBMarketplaceScraper:
         df = pd.DataFrame(data)
         df.to_csv('facebook_marketplace_data.csv', index=False)
         print(df)
-
-
-
-scraper = FBMarketplaceScraper()
-scraper.login()
-products = scraper.scrape_marketplace()
-data = scraper.process_data(products)
-scraper.save_to_csv(data)
