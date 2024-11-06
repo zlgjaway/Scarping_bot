@@ -1,86 +1,54 @@
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from bs4 import BeautifulSoup
-import re
+import os
+from ebaysdk.finding import Connection as finding
+from ebaysdk.exception import ConnectionError
+from dotenv import load_dotenv
 import pandas as pd
-import time
+load_dotenv()
+API_key =os.getenv("api_key")
 
-class FBMarketplaceScraper:
-    def __init__(self):
-        self.email = "nevav55008@ibtrades.com"
-        self.password = "Rog#252005"
-        self.city = "adelaide"
-        self.max_price= 500
+class EbayScraper(object):
+    def __init__(self, API_key):
+        self.api_key = API_key
+        self.max_price = 500
         self.min_price = 10
-        self.base_url = "https://www.facebook.com/marketplace/?ref=app_tab"
-        self.days_listed = 7
-        self.driver = webdriver.Chrome()
+        self.limit_rate = 1
 
-
-    def login(self):
-        self.driver.get("https://www.facebook.com/login")
-        self.driver.find_element(By.ID, "email").send_keys(self.email)
-        self.driver.find_element(By.ID, "pass").send_keys(self.password)
-        self.driver.find_element(By.ID, "pass").submit()
-        time.sleep(5)  # Wait for login
-
-    def Filter_data(self):
-        all_product_elements = self.driver.find_elements(
-            By.CSS_SELECTOR, 
-            "a[role='link']",
+    def extract_csv(self):
+        df = pd.read_csv('facebook_marketplace_data.csv', sep=',', usecols=['title','price'])
+        filtered_df  = df[(df['price'] >= self.min_price) & (df['price'] <= self.max_price)]
+        keywords =  filtered_df['title'].tolist()
+        return  keywords
+    
+    def request_item(self, keywords):
+        call_rate = 0
+        item_extract = []
+        while call_rate <= self.limit_rate : 
+            try:
+                api  = finding(appid=self.api_key, config_file=None )
+                for keyword in keywords:    
+                    response = api.execute('findCompletedItems', {
+                        'keywords': keyword,  
+                        'sortOrder': 'EndTimeSoonest',    
+                        'paginationInput': {
+                        'entriesPerPage': 10,         
+                        'pageNumber': 1
+                        }
+                    })
+                    print (response)
             
-            )
-
-
-    def scrape_marketplace(self):
-        url = f"{self.base_url}minPrice={self.min_price}&maxPrice={self.max_price}&daysSinceListed={self.days_listed}&exact=false"
-        self.driver.get(url)
-        time.sleep(5)
-
-        all_html_content = []
-        try:
-            last_height = self.driver.execute_script("return document.body.scrollHeight")
-            while True:
-                self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-                time.sleep(5)  # Wait for new items to load
-
-                all_product_elements = self.driver.find_elements(By.CSS_SELECTOR, "a[role='link']")
-                all_html_content.extend([elem.get_attribute('outerHTML') for elem in all_product_elements])
-
-                new_height = self.driver.execute_script("return document.body.scrollHeight")
-                if new_height == last_height:
-                    break
-                last_height = new_height
-        except Exception as e:
-            print(f"There was an error: {e}")
-
-        soup = BeautifulSoup(''.join(all_html_content), 'html.parser')
-        self.driver.quit()
-
-        products = [product for product in soup.find_all("a") if self.city.lower() in product.text.lower()]
-        return products
-
-    def process_data(self, products):
-        extract_data = []
-        for product in products:
-            text = "\n".join(product.stripped_strings)
-            url = product.get("href", "")
-            lines = text.split("\n")
-            title = lines[-2] if len(lines) > 1 else ""
-            location = lines[-1] if len(lines) > 1 else ""
-            price_match = re.search(r"\d[\d,.]*", text)
-            price = float(price_match.group().replace(",", "")) if price_match else None
-
-            extract_data.append({
-                "title": title,
-                "price": price,
-                "location": location,
-                "url": re.sub(r"\?.*", "", url)
-            })
-
-        return extract_data
-
-    def save_to_csv(self, data):
+                for item in response.reply.searchResult.item:
+                    item_extract = item.currentPrice.value
+                    return item_extract
+            except ConnectionError as e:
+                print(e.response.dict())
+        call_rate +1
+    def save_to_csv(self,data):
         df = pd.DataFrame(data)
-        df.to_csv('facebook_marketplace_data.csv', index=False)
+        df.to_csv('ebay_data.csv', index=False)
         print(df)
+
+scraper = EbayScraper(API_key)
+keywords = scraper.extract_csv()  # Get all keywords
+data = scraper.request_item(keywords)    # Pass all keywords at once
+scraper.save_to_csv(data)
+
