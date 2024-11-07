@@ -90,17 +90,7 @@ class EbayScrapper:
         #WebDriverWait(self.driver, 60).until(EC.element_to_be_clickable((By.ID, "userid"))).send_keys(self.email)
         #self.driver.find_element(By.ID, "userid").send_keys(self.email)
         #WebDriverWait(self.driver, 20).until(EC.element_to_be_clickable((By.XPATH, "//label[@for='userid']"))).send_keys(self.email)
-        try:
-    # Wait for the element to be clickable and attempt to interact
-            #WebDriverWait(self.driver, 20).until(EC.element_to_be_clickable((By.ID, "anchor-state")))
-            self.driver.find_element(By.ID, "anchor-state")
-            print("Element found")
-            input("Please complete the reCAPTCHA and press Enter to continue...")
-        except ElementNotInteractableException:
-            print("Element is not interactable")
-            self.driver.find_element(By.ID, "userid").send_keys(self.email)
-            
-        #self.driver.find_element(By.ID, "userid").send_keys(self.email)
+        WebDriverWait(self.driver, 20).until(EC.element_to_be_clickable((By.ID, "userid"))).send_keys(self.email)
         self.driver.find_element(By.ID, "signin-continue-btn").click()
         self.driver.find_element(By.ID, "pass").send_keys(self.password)
         self.driver.find_element(By.ID, "sgnBt").click()
