@@ -1,63 +1,100 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.wait import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.chrome.options import Options
-import time
 from bs4 import BeautifulSoup
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.wait import WebDriverWait
 import re
 import pandas as pd
+import time
 
-chrome_options = Options()
-chrome_options.add_argument("--disable-gpu")
-chrome_options.add_argument("--disable-software-rasterizer")
-chrome_options.add_argument("start-maximized")
-chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
-chrome_options.add_experimental_option('useAutomationExtension', False)
-
-class EbayScrapper:
+class EbayScraper:
     def __init__(self):
         self.email = "long252005@gmail.com"
         self.password = "Rog#252005"
-        self.driver =  webdriver.Chrome(options=chrome_options)
-
+        self.driver = webdriver.Chrome()
+        self.min_price = 10
+        self.max_price = 200
+    
     def login(self):
         self.driver.get("https://signin.ebay.com.au/ws/eBayISAPI.dll?SignIn&sgfl=gh&ru=https%3A%2F%2Fwww.ebay.com.au%2F")
-        #bot detection
-        #if self.driver.find_element(By.XPATH, "//label[@for='userid']"):
-        
-        WebDriverWait(self.driver, 15).until(EC.element_to_be_clickable((By.CLASS_NAME, "button-submit button"))).click()
-        WebDriverWait(self.driver,5).until(EC.find_element((By.ID,"userid"))).send_keys(self.email)
-        WebDriverWait(self.driver,5).until(EC.find_element((By.ID,"pass"))).send_keys(self.password)
+        try:
+            WebDriverWait(self.driver, 20).until(EC.element_to_be_clickable((By.XPATH, "//label[@for='userid']")))
+        except Exception as e:
+            print(f"There are an error: {e}")
+        self.driver.find_element(By.ID, "userid").send_keys(self.email)
+        #signin-continue-btn
+        self.driver.find_element(By.ID, "signin-continue-btn").submit()
+        #time.sleep(5)
+        try:
+            WebDriverWait(self.driver, 20).until(EC.element_to_be_clickable((By.XPATH, "//label[@for='pass']")))
+        except Exception as e:
+            print(f"There are an error: {e}")
+        self.driver.find_element(By.ID, "pass").send_keys(self.password)
+        #sgnBt
+        self.driver.find_element(By.ID, "sgnBt").submit()
         time.sleep(5)
-#id="recaptcha-anchor-label">
-
-    def extract_data(self):
-        #/home/zlgjaway/Documents/ScarpingBot_project/facebook_marketplace_data.csv
+    def import_data (self):
+         #/home/zlgjaway/Documents/ScarpingBot_project/facebook_marketplace_data.csv
         df = pd.read_csv('facebook_marketplace_data.csv', sep=',', usecols=['title','price'])
         filtered_df  = df[(df['price'] >= self.min_price) & (df['price'] <= self.max_price)]
         keywords =  filtered_df['title'].tolist()
+        print(keywords)
         return  keywords 
+    
+    def scrape_Ebay(self, keywords):
+        all_product_elements = []
 
-    def scrape_ebay(self,keywords):
-        for item in keywords:
-            self.driver.find_element(By.ID,"gh-ac").send_key(item)
-            self.driver.find_element(By.ID,"gh-btn").click()
-            self.driver.find_element(By.ID,"icon-checkbox-unchecked-18").click()
-            items = []
-            #loop 10 prices tage for 1 item
-            try:
-                if  items <=  10:
-                    all_product_elements = self.driver.find_elements(By.CSS_SELECTOR, "a[role='link']")
-                    items.extend([elem.get_attribute('outerHTML') for elem in all_product_elements])
+        for keyword in keywords:
+            # Find and clear the search input field, then enter the keyword
+            search_input = self.driver.find_element(By.ID, "gh-ac")
+            search_input.clear()
+            search_input.send_keys(keyword)
 
-            except Exception as e:
-                print(f"there are an error: {e}")
-            soup = BeautifulSoup(''.join(items), 'html.parser')
-            potential_items = soup
-            self.driver.quit()
+            # Click the search button
+            self.driver.find_element(By.ID, "gh-btn").click()
+            time.sleep(5)  # Wait for results to load
 
+            # Scroll to filter option and click on it
+            element = self.driver.find_element(By.XPATH, "//*[@id='x-refine__group__8']/ul/li[5]/div/a/div/span/input")#NoSuchElementException
+            self.driver.execute_script("arguments[0].scrollIntoView(true);", element)
+            element.click()
+            time.sleep(5)  # Wait for page to refresh after filtering
 
+            # Collect items matching the 'item' prefix in their ID
+            items = self.driver.find_elements(By.XPATH, "//*[starts-with(@id, 'item')]")
+            
+            # Extract and store the outerHTML of each item
+            for item in items[:10]:  # Get outerHTML of up to 10 items
+                all_product_elements.append(item.get_attribute('outerHTML'))
+        
+        # Use BeautifulSoup on the joined HTML content
+        products = BeautifulSoup(''.join(all_product_elements), 'html.parser')
+        return products  # You can now further parse `soup` as needed
+    
+    def save_to_csv(self, products):
+        df = pd.DataFrame(products)
+        df.to_csv('ebay_data.csv', index=False)
+        print(df)
+"""
+    def process_data(self, products):
+        extract_data = []
+        for product in products:
+            text = "\n".join(product.stripped_strings)
+            url = product.get("href", "")
+            lines = text.split("\n")
+            title = lines[-2] if len(lines) > 1 else ""
+            location = lines[-1] if len(lines) > 1 else ""
+            price_match = re.search(r"\d[\d,.]*", text)
+            price = float(price_match.group().replace(",", "")) if price_match else None
 
-scrapper =  EbayScrapper()
-scrapper.login()
+            extract_data.append({
+                "title": title,
+                "price": price,
+                "url": re.sub(r"\?.*", "", url)
+            })
+"""            
+scraper = EbayScraper()
+scraper.login()
+keywords = scraper.import_data()
+products = scraper.scrape_Ebay(keywords)
+scraper.save_to_csv(products)
