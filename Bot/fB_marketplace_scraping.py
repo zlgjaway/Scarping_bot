@@ -1,14 +1,17 @@
+import os
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from bs4 import BeautifulSoup
+from dotenv import load_dotenv
 import re
 import pandas as pd
 import time
 
 class FBMarketplaceScraper:
     def __init__(self):
-        self.email = "nevav55008@ibtrades.com"
-        self.password = "Rog#252005"
+        load_dotenv()
+        self.email = os.getenv("facebook_email")
+        self.password = os.getenv("facebook_pass")
         self.city = "adelaide"
         self.max_price= 500
         self.min_price = 10

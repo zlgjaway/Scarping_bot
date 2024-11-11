@@ -3,14 +3,16 @@ from selenium.webdriver.common.by import By
 from bs4 import BeautifulSoup
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
+from dotenv import load_dotenv
+import os
 import re
 import pandas as pd
 import time
-
 class EbayScraper:
     def __init__(self):
-        self.email = "long252005@gmail.com"
-        self.password = "Rog#252005"
+        load_dotenv()
+        self.email = os.getenv("ebay_email")
+        self.password = os.getenv("ebay_pass")
         self.driver = webdriver.Chrome()
         self.min_price = 10
         self.max_price = 200
