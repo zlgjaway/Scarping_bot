@@ -62,16 +62,19 @@ class EbayScraper:
             element.click()
             time.sleep(5)  # Wait for page to refresh after filtering
 
-            # Collect items matching the 'item' prefix in their ID
-            items = self.driver.find_elements(By.XPATH, "//*[starts-with(@id, 'item')]")
+            # Collect items matching the 'item' prefix in their ID //*[@id="item498fb3ed73"]/div/div[1]/div/a #item498fb3ed73 > div > div.s-item__image-section > div > a
+            items = self.driver.find_elements(By.CSS_SELECTOR, "a[role='link']")
             
             # Extract and store the outerHTML of each item
             for item in items[:10]:  # Get outerHTML of up to 10 items
                 all_product_elements.append(item.get_attribute('outerHTML'))
         
         # Use BeautifulSoup on the joined HTML content
-        products = BeautifulSoup(''.join(all_product_elements), 'html.parser')
-        return products  # You can now further parse `soup` as needed
+        soup = BeautifulSoup(''.join(all_product_elements), 'html.parser')
+        self.driver.quit()
+
+        products = [product for product in soup.find_all("a")]
+        return products
     
     def save_to_csv(self, products):
         df = pd.DataFrame(products)
