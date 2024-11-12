@@ -57,13 +57,15 @@ class EbayScraper:
             time.sleep(5)  # Wait for results to load
 
             # Scroll to filter option and click on it
-            element = self.driver.find_element(By.XPATH, "//*[@id='x-refine__group__8']/ul/li[5]/div/a/div/span/input")#NoSuchElementException
-            self.driver.execute_script("arguments[0].scrollIntoView(true);", element)
-            element.click()
+
+            element = WebDriverWait(self.driver, 20).until(
+            EC.element_to_be_clickable((By.XPATH, "//span[text()='Sold items']/preceding-sibling::input"))#check if element exists
+            )
+            self.driver.execute_script("arguments[0].scrollIntoView(true);", element) # scroll to view element
             time.sleep(5)  # Wait for page to refresh after filtering
 
-            # Collect items matching the 'item' prefix in their ID //*[@id="item498fb3ed73"]/div/div[1]/div/a #item498fb3ed73 > div > div.s-item__image-section > div > a
-            items = self.driver.find_elements(By.CSS_SELECTOR, "a[role='link']")
+            #// xpath = *[@id="item473776eb82"] ; css selector = #item473776eb82
+            items = self.driver.find_elements(By.CSS_SELECTOR, "item[role='link']")
             
             # Extract and store the outerHTML of each item
             for item in items[:10]:  # Get outerHTML of up to 10 items
