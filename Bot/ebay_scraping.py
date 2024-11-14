@@ -45,7 +45,7 @@ class EbayScraper:
     
     def scrape_Ebay(self, keywords):
         all_product_elements = []
-
+        Button_click = 0
         for keyword in keywords:
             # Find and clear the search input field, then enter the keyword
             search_input = self.driver.find_element(By.ID, "gh-ac")
@@ -57,12 +57,14 @@ class EbayScraper:
             time.sleep(5)  # Wait for results to load
 
             # Scroll to filter option and click on it
-
-            element = WebDriverWait(self.driver, 20).until(
-            EC.element_to_be_clickable((By.XPATH, "//span[text()='Sold items']/preceding-sibling::input"))#check if element exists
-            )
-            self.driver.execute_script("arguments[0].scrollIntoView(true);", element) # scroll to view element
-            time.sleep(5)  # Wait for page to refresh after filtering
+            if Button_click < 1:
+                element = WebDriverWait(self.driver, 20).until(
+                EC.element_to_be_clickable((By.XPATH, "//li[@name='LH_Sold']//a[contains(@href, 'LH_Sold=1')]"))#check if element exists but you only need to click once 
+                )
+                self.driver.execute_script("arguments[0].scrollIntoView(true);", element) # scroll to view element
+                element.click()
+                Button_click = Button_click +1
+                time.sleep(5)  # Wait for page to refresh after filtering
 
             #// xpath = *[@id="item473776eb82"] ; css selector = #item473776eb82
             items = self.driver.find_elements(By.CSS_SELECTOR, "item[role='link']")
@@ -70,7 +72,6 @@ class EbayScraper:
             # Extract and store the outerHTML of each item
             for item in items[:10]:  # Get outerHTML of up to 10 items
                 all_product_elements.append(item.get_attribute('outerHTML'))
-        
         # Use BeautifulSoup on the joined HTML content
         soup = BeautifulSoup(''.join(all_product_elements), 'html.parser')
         self.driver.quit()
