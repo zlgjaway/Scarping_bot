@@ -1,134 +1,48 @@
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from bs4 import BeautifulSoup
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.support.wait import WebDriverWait
-from dotenv import load_dotenv
-import os
-import re
 import pandas as pd
-import time
-class EbayScraper:
+
+class Compare_price():
     def __init__(self):
-        load_dotenv()
-        self.email = os.getenv("ebay_email")
-        self.password = os.getenv("ebay_pass")
-        self.driver = webdriver.Chrome()
-        self.min_price = 10
-        self.max_price = 200
+        self.fee = 15
+        self.shipping = 15
     
-    def login(self):
-        self.driver.get("https://signin.ebay.com.au/ws/eBayISAPI.dll?SignIn&sgfl=gh&ru=https%3A%2F%2Fwww.ebay.com.au%2F")
-        try:
-            WebDriverWait(self.driver, 20).until(EC.element_to_be_clickable((By.XPATH, "//label[@for='userid']")))
-        except Exception as e:
-            print(f"There are an error: {e}")
-        self.driver.find_element(By.ID, "userid").send_keys(self.email)
-        #signin-continue-btn
-        self.driver.find_element(By.ID, "signin-continue-btn").submit()
-        #time.sleep(5)
-        try:
-            WebDriverWait(self.driver, 20).until(EC.element_to_be_clickable((By.XPATH, "//label[@for='pass']")))
-        except Exception as e:
-            print(f"There are an error: {e}")
-        self.driver.find_element(By.ID, "pass").send_keys(self.password)
-        #sgnBt
-        self.driver.find_element(By.ID, "sgnBt").submit()
-        time.sleep(5)
+    def import_data(self):
+        # Load the CSV file with eBay data
+        df = pd.read_csv('ebay_data.csv', sep=',', usecols=['title', 'price'])
+        # Convert the price column to float for numerical calculations
+        df['price'] = df['price'].astype(float)
+        # Extract the title and price as a list of tuples (title, price)
+        keywords = df[['title', 'price']].values.tolist()
+        return keywords
 
-    def import_data (self):
-         #/home/zlgjaway/Documents/ScarpingBot_project/facebook_marketplace_data.csv
-        df = pd.read_csv('facebook_marketplace_data.csv', sep=',', usecols=['title','price'])
-        filtered_df  = df[(df['price'] >= self.min_price) & (df['price'] <= self.max_price)]
-        keywords =  filtered_df['title'].tolist()
-        print(keywords)
-        return  keywords 
-    
-    def scrape_Ebay(self, keywords):
-        all_product_elements = []
-        Button_click = 0
-        for keyword in keywords:
-            # Find and clear the search input field, then enter the keyword
-            search_input = self.driver.find_element(By.ID, "gh-ac")
-            search_input.clear()
-            search_input.send_keys(keyword)
-
-            # Click the search button id="gh-btn"
-            self.driver.find_element(By.ID, "gh-btn").click()
-            time.sleep(5)  # Wait for results to load
-
-            # Scroll to filter option and click on it
-            if Button_click < 1:
-                element = WebDriverWait(self.driver, 20).until(
-                EC.element_to_be_clickable((By.XPATH, "//li[@name='LH_Sold']//a[contains(@href, 'LH_Sold=1')]"))#check if element exists but you only need to click once 
-                )
-                self.driver.execute_script("arguments[0].scrollIntoView(true);", element) # scroll to view element
-                element.click()
-                Button_click = Button_click +1
-                time.sleep(5)  # Wait for page to refresh after filtering
-
-            #// xpath = *[@id="item473776eb82"] ; css selector =#item3bbd688738 //*[@id="item3bbd688738"]
-            #items = self.driver.find_elements(By.CSS_SELECTOR, "li.s-item s-item__pl-on-bottom")
-            items = self.driver.find_elements(By.CSS_SELECTOR, "li.s-item")         
-            # Extract and store the outerHTML of each item
-            for idx, item in enumerate(items[2:12]):  # Process exactly 10 items
-                all_product_elements.append(item.get_attribute('outerHTML'))
-                if (idx + 1) % 12 == 0:  # Add a marker for every 12 items (if relevant)
-                    all_product_elements.append("<!-- Separator for Excel -->")
-# Combine collected HTML elements into one string
-        combined_html = '\n'.join(all_product_elements)  # Use newline for readability
-# Pass the combined HTML to BeautifulSoup
-        soup = BeautifulSoup(combined_html, 'html.parser')
-        self.driver.quit()
-        products = [product for product in soup.find_all('li', class_='s-item')]
-        return products
-    
-    def process_data(self, products):
-        extract_data = []
-        for product in products:
-            # Extract text
-            text = "\n".join(product.stripped_strings)
-            # Extract URL
-            link_tag = product.find('a', href=True)
-            url = link_tag['href'] if link_tag else ''
-            # Extract title
-            title_tag = product.find('span', {'role': 'heading'})
-            title = title_tag.text.strip() if title_tag else 'N/A'
-            # Extract price
-            price_match = re.search(r"\$\d[\d,.]*", text)
-            price = float(price_match.group().replace("$", "").replace(",", "")) if price_match else None
-
-            # Append extracted data
-            extract_data.append({
-                "title": title,
-                "price": price,
-                "url": url,
-            })
-        print(extract_data)
-        return extract_data
-    
-    def save_to_csv(self,extract_data):
-        df = pd.DataFrame(extract_data)
+    def calculate_average_ebay_price(self, keywords):
+        # Only process the first 10 items
+        items = [keyword[1] for keyword in keywords[:10]]  # Get prices for the first 10 items
         
-        # Create blank rows for spacing
-        spacing_rows = [{"title": "", "price": None, "url": ""}]  # Adjust keys to match column names
-        spaced_data = []
+        # Ensure the items list is not empty before calculating the average
+        if len(items) > 0:
+            average_price = sum(items) / len(items)  # Calculate average price
+            print(f"Average eBay Price for first 10 items: {average_price:.2f}")
+            print(average_price)
+            return average_price
+        else:
+            print("No items to calculate average price.")
+            return None
 
-        # Insert a blank row after every 10 products
-        for i in range(0, len(df), 10):
-            spaced_data.extend(df.iloc[i:i+10].to_dict('records'))  # Add 10 products
-            spaced_data.extend(spacing_rows)  # Add a blank row
+    
+   
+""" 
+    def caculate_margin(self,):
+        Facebook_items = EbayScraper.import_data()
+        print("hello")
 
-        # Convert spaced data back to DataFrame
-        spaced_df = pd.DataFrame(spaced_data)
-
-        # Save to CSV
-        spaced_df.to_csv('ebay_data.csv', index=False)
-            
-scraper = EbayScraper()
-scraper.login()
-keywords = scraper.import_data()
-products = scraper.scrape_Ebay(keywords)
-extract_data = scraper.process_data(products)
-scraper.save_to_csv(extract_data)
-
+    def import_ebay_data(self):
+        df = pd.read_csv('ebay_data.csv', sep=',', usecols=['title','price']) 
+        filtered_df  = df[(df['price'] >= self.min_price) & (df['price'] <= self.max_price)]
+        Ebay_items =  filtered_df['title'].tolist()
+        print(Ebay_items)
+        return  Ebay_items 
+"""
+Price = Compare_price()
+Ebay_items = Price.import_data()
+Price.calculate_average_ebay_price(Ebay_items)
+#Price.caculate_averge_ebay_price(Ebay_items)

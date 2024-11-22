@@ -37,7 +37,7 @@ class EbayScraper:
         time.sleep(5)
     def import_data (self):
          #/home/zlgjaway/Documents/ScarpingBot_project/facebook_marketplace_data.csv
-        df = pd.read_csv('facebook_marketplace_data.csv', sep=',', usecols=['title','price'])
+        df = pd.read_csv('ebay_data.csv', sep=',', usecols=['title','price'])
         filtered_df  = df[(df['price'] >= self.min_price) & (df['price'] <= self.max_price)]
         keywords =  filtered_df['title'].tolist()
         print(keywords)
