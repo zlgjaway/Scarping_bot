@@ -1,50 +1,49 @@
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.wait import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.chrome.options import Options
-from selenium.common.exceptions import ElementNotInteractableException
-
-import time
-from bs4 import BeautifulSoup
-import re
 import pandas as pd
 
-chrome_options = Options()
-chrome_options.add_argument("--disable-gpu")
-chrome_options.add_argument("--disable-software-rasterizer")
-chrome_options.add_argument("start-maximized")
-
-
-class EbayScrapper:
+class Compare_price():
     def __init__(self):
-        self.email = "long252005@gmail.com"
-        self.password = "Rog#252005"
-        self.driver =  webdriver.Chrome(options=chrome_options)
+        self.fee = 15
+        self.shipping = 15
+    
+    def import_data(self):
+        # Load the CSV file with eBay data
+        df = pd.read_csv('ebay_data.csv', sep=',', usecols=['title', 'price'])
+        # Convert the price column to float for numerical calculations
+        df['price'] = df['price'].astype(float)
+        # Extract the title and price as a list of tuples (title, price)
+        keywords = df[['title', 'price']].values.tolist()
+        return keywords
 
-    def login(self):
-        self.driver.get("https://signin.ebay.com.au/ws/eBayISAPI.dll?SignIn&sgfl=gh&ru=https%3A%2F%2Fwww.ebay.com.au%2F")
-        #bot detection
-        #if self.driver.find_element(By.XPATH, "//label[@for='userid']"):
-        
-        #WebDriverWait(self.driver, 15).until(EC.element_to_be_clickable((By.CLASS_NAME, "button-submit button"))).click()
-        #WebDriverWait(self.driver, 60).until(EC.presence_of_element_located((By.ID, "userid")))
+    def calculate_average_ebay_price(self, keywords):
+        # Only process the first 10 items
+        #items = [keyword[1] for keyword in keywords[:10]]  # Get prices for the first 10 items
+        items = []
+        items_list = []
+        for keyword in keywords:
+            if keyword :
+                skip
+            items.append(keyword[1])
+            if len(items) == 10:
+                print(items)
+                average_price = sum(items) / len(items)  # Calculate average price
+                items_list.append(average_price)
+                items = []
 
-        #WebDriverWait(self.driver, 60).until(EC.element_to_be_clickable((By.ID, "userid"))).send_keys(self.email)
-        #self.driver.find_element(By.ID, "userid").send_keys(self.email)
-        #WebDriverWait(self.driver, 20).until(EC.element_to_be_clickable((By.XPATH, "//label[@for='userid']"))).send_keys("")
-        WebDriverWait(self.driver, 20).until(EC.element_to_be_clickable((By.XPATH, "//label[@for='userid']")))
-        #WebDriverWait(self.driver, 20).until(EC.element_to_be_clickable((By.ID, "userid")))
-        self.driver.find_element(By.ID, "userid").send_keys(self.email)
-        #self.driver.find_element(By.ID, "signin-continue-btn").click()
-        self.driver.find_element(By.ID, "pass").send_keys(self.password)
-        self.driver.find_element(By.ID, "sgnBt").click()
-        time.sleep(5)
-#id="recaptcha-anchor-l
 
-scrapper =  EbayScrapper()
-scrapper.login()
-#id="recaptcha-anchor-label">
+   
+""" 
+    def caculate_margin(self,):
+        Facebook_items = EbayScraper.import_data()
+        print("hello")
+
+    def import_ebay_data(self):
+        df = pd.read_csv('ebay_data.csv', sep=',', usecols=['title','price']) 
+        filtered_df  = df[(df['price'] >= self.min_price) & (df['price'] <= self.max_price)]
+        Ebay_items =  filtered_df['title'].tolist()
+        print(Ebay_items)
+        return  Ebay_items 
 """
-//*[@id="signin-form"]/div/div[1]/div/div[1]/div/div[1]
-"""
+Price = Compare_price()
+Ebay_items = Price.import_data()
+Price.calculate_average_ebay_price(Ebay_items)
+#Price.caculate_averge_ebay_price(Ebay_items)

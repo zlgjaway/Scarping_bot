@@ -13,9 +13,8 @@ class FBMarketplaceScraper:
         self.email = os.getenv("facebook_email")
         self.password = os.getenv("facebook_pass")
         self.city = "adelaide"
-        self.max_price= 500
-        self.min_price = 10
-        self.base_url = "https://www.facebook.com/marketplace/?ref=app_tab"
+        
+        self.base_url = "https://www.facebook.com/marketplace/category/video-games-consoles" #scrape video-games-consoles
         self.days_listed = 7
         self.driver = webdriver.Chrome()
 
@@ -28,7 +27,7 @@ class FBMarketplaceScraper:
         time.sleep(5)  # Wait for login
 
     def scrape_marketplace(self):
-        url = f"{self.base_url}minPrice={self.min_price}&maxPrice={self.max_price}&daysSinceListed={self.days_listed}&exact=false"
+        url = f"{self.base_url}"
         self.driver.get(url)
         time.sleep(5)
 
@@ -61,7 +60,7 @@ class FBMarketplaceScraper:
             text = "\n".join(product.stripped_strings)
             url = product.get("href", "")
             lines = text.split("\n")
-            title = lines[-2] if len(lines) > 1 else ""
+            title = lines[-2].split(",")[0] if len(lines) > 1 else ""
             location = lines[-1] if len(lines) > 1 else ""
             price_match = re.search(r"\d[\d,.]*", text)
             price = float(price_match.group().replace(",", "")) if price_match else None
