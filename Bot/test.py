@@ -52,7 +52,7 @@ class ComparePrice:
                 profit = ebay_price - fb_item_cost
                 margin = (profit / fb_items[i][1]) * self.percentage
                 item_margin_list.append(margin)
-        return item_margin_list
+        return item_margin_list 
 
 # Initialize and run
 price_compare = ComparePrice()
