@@ -13,7 +13,6 @@ class FBMarketplaceScraper:
         self.email = os.getenv("facebook_email")
         self.password = os.getenv("facebook_pass")
         self.city = "adelaide"
-        
         self.base_url = "https://www.facebook.com/marketplace/category/video-games-consoles" #scrape video-games-consoles
         self.days_listed = 7
         self.driver = webdriver.Chrome()
