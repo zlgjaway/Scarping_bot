@@ -16,6 +16,7 @@ class FBMarketplaceScraper:
         self.base_url = "https://www.facebook.com/marketplace/category/video-games-consoles" #scrape video-games-consoles
         self.days_listed = 7
         self.driver = webdriver.Chrome()
+        self.multi_items_listing = [games,pack,bundle,items]
 
 
     def login(self):
@@ -39,7 +40,11 @@ class FBMarketplaceScraper:
 
                 all_product_elements = self.driver.find_elements(By.CSS_SELECTOR, "a[role='link']")
                 all_html_content.extend([elem.get_attribute('outerHTML') for elem in all_product_elements])
-
+                # adding condition detect multi-item list 
+                #try to sperate multi_item listing in differnt list
+                #loop the list to extract data of the list 
+                
+                
                 new_height = self.driver.execute_script("return document.body.scrollHeight")
                 if new_height == last_height:
                     break
@@ -50,7 +55,12 @@ class FBMarketplaceScraper:
         soup = BeautifulSoup(''.join(all_html_content), 'html.parser')
         self.driver.quit()
 
-        products = [product for product in soup.find_all("a") if self.city.lower() in product.text.lower()]
+        products = []
+        for product in soup.find_all("a"):
+            for keword in self.multi_items_listing():
+                if self.city.lower() in product.text.lower() and keword not in self.product.text.lower():                    
+                    products.append(product)
+                          
         return products
 
     def process_data(self, products):
