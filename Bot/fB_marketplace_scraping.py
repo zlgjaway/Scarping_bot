@@ -16,7 +16,7 @@ class FBMarketplaceScraper:
         self.base_url = "https://www.facebook.com/marketplace/category/video-games-consoles" #scrape video-games-consoles
         self.days_listed = 7
         self.driver = webdriver.Chrome()
-        self.multi_items_listing = [games,pack,bundle,items]
+        self.multi_items_listing = ["games","pack","bundle","items"]
 
 
     def login(self):
@@ -43,29 +43,28 @@ class FBMarketplaceScraper:
                 # adding condition detect multi-item list 
                 #try to sperate multi_item listing in differnt list
                 #loop the list to extract data of the list 
-                
-                
                 new_height = self.driver.execute_script("return document.body.scrollHeight")
                 if new_height == last_height:
                     break
                 last_height = new_height
         except Exception as e:
             print(f"There was an error: {e}")
-
         soup = BeautifulSoup(''.join(all_html_content), 'html.parser')
         self.driver.quit()
 
-        products = []
+        single_products = []
+        multi_products = []
         for product in soup.find_all("a"):
-            for keword in self.multi_items_listing():
-                if self.city.lower() in product.text.lower() and keword not in self.product.text.lower():                    
-                    products.append(product)
-                          
-        return products
+                if self.city.lower() in product.text.lower():                    
+                    multi_products.append(product)# swap
+                elif self.city.lower() in product.text.lower():
+                    single_products.append(product)
+                                
+        return single_products, multi_products 
 
-    def process_data(self, products):
+    def process_data(self, single_products,multi_products):
         extract_data = []
-        for product in products:
+        for product in single_products:
             text = "\n".join(product.stripped_strings)
             url = product.get("href", "")
             lines = text.split("\n")

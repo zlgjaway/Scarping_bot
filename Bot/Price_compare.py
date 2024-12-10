@@ -45,9 +45,6 @@ class Compare_price():
                 FB_items_cost_list.append(cost)
             return FB_items_cost_list
     
-    def isNaN(num):
-        return num != num
-    
     def calculate_margin(self, FB_items_cost_list, Ebay_average_prices_list,FB_items):
         item_margin_list = []
         for Total_cost, Ebay_price,FB_item in zip(FB_items_cost_list, Ebay_average_prices_list,FB_items):
