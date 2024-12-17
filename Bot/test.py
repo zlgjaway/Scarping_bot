@@ -71,6 +71,7 @@ class FBMarketplaceScraper:
         return single_products, multi_products
     def process_data(self, single_products,multi_products):
         extract_data = []
+        all_html_content = []
         for product in single_products:
             text = "\n".join(product.stripped_strings)
             url = product.get("href", "")
@@ -86,9 +87,15 @@ class FBMarketplaceScraper:
                 "location": location,
                 "url": re.sub(r"\?.*", "", url)
             })
-
+        
         for product in multi_products:
-            print(product)# a didnt contain description
+            url =  re.sub(r"\?.*", "", url)
+            self.driver.get(f"https://www.facebook.com/{url}")
+            all_product_elements = self.driver.find_elements(By.XPATH, "//*[contains(@id, 'mount_0_0_')]/div/div[1]/div/div[3]//div[2]/div/div[2]")
+            #if no price in discrtion append data
+            #if price in discrtion all_html_content
+            all_html_content.extend([elem.get_attribute('outerHTML') for elem in all_product_elements])
+
         return extract_data
 
     def save_to_csv(self, data):
