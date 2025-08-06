@@ -1,0 +1,20 @@
+import requests
+
+url = "https://api.ebay.com/buy/browse/v1/item_summary/search"
+headers = {
+    "Authorization": "Bearer v^1.1#i^1#r^0#p^3#f^0#I^3#t^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",
+    "Content-Type": "application/json",
+}
+params = {
+    "q": "nintendo 64",
+    "limit": "10"
+}
+
+response = requests.get(url, headers=headers, params=params)
+
+if response.status_code == 200:
+    items = response.json()
+    for item in items.get("itemSummaries", []):
+        print(f"{item['title']} - ${item['price']['value']}")
+else:
+    print("Error:", response.text)

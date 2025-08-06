@@ -5,7 +5,7 @@ class Compare_price():
     def __init__(self):
         self.ebay_fee = 0.15
         self.paypal_fee = 0.029
-        self.shipping = 15
+        self.shipping = 9.70
         self.percentage = 100
         
     def import_ebay_data(self):
@@ -19,7 +19,7 @@ class Compare_price():
         return Ebay_items
     
     def import_FB_data(self):
-        df = pd.read_csv('facebook_marketplace_data.csv', sep=',', usecols=['title','price']) 
+        df = pd.read_csv('facebook_marketplace_data.csv', sep=',', usecols=['title','price','url']) 
         FB_items = df[df['title'].notna() & df['price'].notna()].values.tolist()
         return  FB_items 
           
@@ -40,7 +40,7 @@ class Compare_price():
     def caculate_cost(self,FB_items):
             FB_items_cost_list = []
             for FB_item in FB_items:
-                Total_Fees =  FB_item[1] * self.ebay_fee + FB_item[1] * self.paypal_fee
+                Total_Fees =  FB_item[1] * self.ebay_fee + FB_item[1] * self.paypal_fee + self.shipping
                 cost = FB_item[1] + Total_Fees
                 FB_items_cost_list.append(cost)
             return FB_items_cost_list
@@ -51,13 +51,23 @@ class Compare_price():
             FB_cost = FB_item[1]
             if Total_cost > 0 and not math.isnan(FB_cost):
                 profit = Ebay_price - Total_cost
-                margin = (profit / FB_cost) * self.percentage 
-                item_margin_list.append(margin)
-                print(f"Profit Margins:, {margin}%")  
+                margin = round((profit / FB_cost) * self.percentage,0)
+                if margin > 10:
+                    item_margin_list.append({
+                            "title": FB_item[0],
+                            "price": FB_item[1],
+                            "url"  : FB_item[2],
+                            "Profit Margins": margin
+                        })#margin
+                    print(f"Profit Margins:, {margin}%") 
             else:
                 item_margin_list.append(0)
         
         return item_margin_list
+    
+    def save_to_csv(self, item_margin_list ): 
+        df = pd.concat([pd.DataFrame(item_margin_list)], ignore_index=True)
+        df.to_csv('Calculate_margin.csv', index=False)
     
 Price = Compare_price()
 Ebay_items = Price.import_ebay_data()
@@ -65,6 +75,6 @@ average_ebay_price = Price.calculate_average_ebay_price(Ebay_items)
 fb_items = Price.import_FB_data()
 cost = Price.caculate_cost(fb_items)
 margin = Price.calculate_margin(cost,average_ebay_price,fb_items)
-
+Price.save_to_csv(margin)
 
 #Price.caculate_averge_ebay_price(Ebay_items)
