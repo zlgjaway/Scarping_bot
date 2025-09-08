@@ -13,8 +13,9 @@ class FBMarketplaceScraper:
         self.email = os.getenv("facebook_email")
         self.password = os.getenv("facebook_pass")
         self.city = "adelaide"
-        self.base_url = "https://www.facebook.com/marketplace/adelaide/search?query=video games" #scrape video-games-consoles
-        #self.base_url = "https://www.facebook.com/marketplace/adelaide/search?minPrice=50&maxPrice=50&query=SNES%20and%20Nintendo%2064%20games&exact=false"
+        #self.base_url = "https://www.facebook.com/marketplace/adelaide/video-games-consoles/?exact=false" #scrape video-games-consoles
+        #self.base_url = "https://www.facebook.com/marketplace/category/electronics" #scrape electronics
+        self.base_url = "https://www.facebook.com/marketplace/?ref=app_tab"
 
         self.days_listed = 7
         self.driver = webdriver.Chrome()
@@ -23,7 +24,7 @@ class FBMarketplaceScraper:
         "combo", "assorted", "variety", "multiple", "bulk", "series", 
         "edition", "mix", "group", "assortment"
         ]
-        self.hprice = 250
+        self.hprice = 100
         self.lprice = 10
         self.multi_item_description = "$"
         self.model = joblib.load("D:\WEB-Scraping Project\junk_filter_model.pkl") 
